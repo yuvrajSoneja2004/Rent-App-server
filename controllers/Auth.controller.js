@@ -1,5 +1,6 @@
 const useDetect = require("../utils/useDetect");
 const Users = require("../models/User.model");
+const bcrypt = require("bcrypt");
 
 const registerController = async (req, res) => {
   try {
@@ -14,11 +15,15 @@ const registerController = async (req, res) => {
     } else {
       // Extract relevant data from the request body
       const { name, email, password } = req.body;
-      // Create a new User instance with extracted data
+
+      // Hash the password using bcrypt
+      const hashedPassword = await bcrypt.hash(password, 10); // 10 is the number of salt rounds
+
+      // Create a new User instance with hashed password
       const newUser = new Users({
         username: name,
         useremail: email,
-        userpassword: password,
+        userpassword: hashedPassword, // Store the hashed password in the database
       });
 
       // Save the new user in the database
@@ -50,4 +55,29 @@ const registerController = async (req, res) => {
   }
 };
 
-module.exports = { registerController };
+const loginController = async (req, res) => {
+  const { username, password } = req.body;
+
+  // Check if username and password are provided
+  if (!username || !password) {
+    return res
+      .status(400)
+      .json({ message: "Username and password are required" });
+  }
+
+  // Check if user exists in the mock database
+  const user = await Users.findOne({ username: username });
+
+  if (!user) {
+    return res.status(401).json({ message: "Invalid username or Password 1" });
+  }
+
+  // Check if the provided password matches the stored password
+  if (user.userpassword !== password) {
+    return res.status(401).json({ message: "Invalid username or password 2" });
+  }
+
+  // Successful login
+  res.status(200).json({ message: "Login successful", user: user.username });
+};
+module.exports = { registerController, loginController };

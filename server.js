@@ -10,6 +10,8 @@ const userAuthRoutes = require("./routes/Auth.routes");
 
 // use middle to parse JSON
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 // Use route files as middleware
 app.use("/api/auth", userAuthRoutes);
